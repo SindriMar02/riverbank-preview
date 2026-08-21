@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Owner view | Riverbank</title>
+<meta name="description" content="The owner side of the Riverbank demo: incoming direct requests, confirm or decline, and what a direct booking keeps.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/ClashDisplay-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/GeneralSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#191B1C">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="rb-owner">
+<a class="rb-skip" href="#main">Skip to content</a>
+<div class="rb-awning" aria-hidden="true"></div>
+
+<nav class="rb-nav is-solid is-over-dark" aria-label="Owner">
+  <a class="rb-brand" href="index.html">Riverbank</a>
+  <div class="rb-nav-links">
+    <a href="index.html#book" target="_blank" rel="noopener">Guest view</a>
+    <a class="rb-book" href="#calc">The maths</a>
+  </div>
+</nav>
+
+<main id="main" class="rb-owner-main">
+  <div class="rb-wrap">
+
+    <header class="rb-owner-head">
+      <div>
+        <p class="rb-caps rb-mute">Owner view · demo</p>
+        <h1 class="rb-h2" style="margin-top:10px">Requests</h1>
+      </div>
+      <button class="rb-pause" type="button" id="rb-reset">Clear demo data</button>
+    </header>
+
+    <p class="rb-owner-hint" id="rb-hint">
+      Open <a href="index.html#book" target="_blank" rel="noopener">the guest page</a> in a second tab and send a request.
+      It appears here the moment you send it, on this screen, with no page reload.
+    </p>
+
+    <div class="rb-tally" id="rb-tally" aria-live="polite"></div>
+
+    <div class="rb-reqs" id="rb-reqs"></div>
+
+    <p class="rb-owner-empty" id="rb-empty">
+      No requests yet. This is what the screen looks like on a quiet morning.
+    </p>
+
+    <!-- THE MATHS -->
+    <section class="rb-calc" id="calc" aria-label="What a direct booking keeps">
+      <div class="rb-rule-head" style="margin-bottom:clamp(24px,3vw,40px)">
+        <h2 class="rb-h2">What a direct booking keeps</h2>
+        <p class="rb-caps rb-mute">Your numbers, not ours</p>
+      </div>
+      <p class="rb-body" style="margin-bottom:28px">The numbers below are placeholders, so the arithmetic has something to work on. None of them come from your accounts and none of them are an estimate of your business. Change them to yours and the figures follow.</p>
+
+      <div class="rb-calc-grid">
+        <div class="rb-field">
+          <label for="rate">Your nightly rate, ISK</label>
+          <input type="number" id="rate" value="45000" min="0" step="1000" inputmode="numeric">
+        </div>
+        <div class="rb-field">
+          <label for="nights">Platform nights per month</label>
+          <input type="number" id="nights" value="20" min="0" max="200" inputmode="numeric">
+        </div>
+        <div class="rb-field">
+          <label for="pct">Commission you pay, %</label>
+          <input type="number" id="pct" value="15" min="0" max="30" step="0.5" inputmode="decimal">
+          <p class="rb-help">Booking.com’s base rate for independent properties in Europe is 15%. Airbnb’s host-only fee is 15.5%. Yours may differ.</p>
+        </div>
+        <div class="rb-field">
+          <label for="shift">Share that could come direct</label>
+          <input type="range" id="shift" value="25" min="0" max="100" step="5">
+          <p class="rb-help"><output id="shift-out">25</output>% direct</p>
+        </div>
+      </div>
+
+      <div class="rb-calc-out">
+        <div class="rb-calc-fig">
+          <p class="rb-caps rb-mute">Commission on those nights, per month</p>
+          <strong id="out-month">0 kr</strong>
+        </div>
+        <div class="rb-calc-fig">
+          <p class="rb-caps rb-mute">Per year</p>
+          <strong id="out-year">0 kr</strong>
+        </div>
+        <div class="rb-calc-fig rb-calc-fig-hero">
+          <p class="rb-caps rb-mute">Kept if <output id="shift-echo">25</output>% booked direct instead</p>
+          <strong id="out-keep">0 kr</strong>
+        </div>
+      </div>
+
+      <p class="rb-calc-note">
+        This is arithmetic on the numbers above, nothing more. It assumes the same rate and the same nights, only booked through your own page instead of a platform. It does not account for the bookings platforms bring you that you would never have got otherwise, which is the real reason to stay on them. The argument is not to leave Booking.com and Airbnb. It is to stop paying commission on the guests who already know your name.
+      </p>
+    </section>
+
+    <section class="rb-owner-note" aria-label="How this works">
+      <h2 class="rb-h3">What this demo is</h2>
+      <p class="rb-body">A working request loop with no server behind it: requests live in this browser only, so nothing here is real guest data and nothing leaves the machine. In a live version the requests would arrive by email as well, and this list would be the record that decides what is agreed.</p>
+      <p class="rb-body" style="margin-top:14px">No card is ever entered, by design. The guest asks, you confirm, money changes hands the way it does now. That means no payment plumbing, no chargebacks, and no monthly card fees.</p>
+    </section>
+
+  </div>
+</main>
+
+<script src="store.js"></script>
+<script src="stjornbord.js"></script>
+</body>
+</html>
