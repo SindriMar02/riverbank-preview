@@ -230,9 +230,14 @@ html.js .rb-nav{transition:opacity .6s ease .5s}
 .rb-door-link:focus-visible{outline:none}
 .rb-door-inner{padding:clamp(20px,3vw,44px);width:100%}
 /* The spec line sits UNDER the name now, on Harpa's note, so the margin flips.
-   It was written to hang above the title. */
+   It was written to hang above the title.
+   min-height reserves two lines in BOTH doors: the Penthouse spec carries three
+   facts and wraps at narrow widths, and because the door contents are
+   bottom-aligned, that wrap lifted its title a line above The One-Bedrooms.
+   Reserving the space in both keeps the two names on the same baseline whether
+   either wraps or not. */
 .rb-door-loc{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;font-weight:500;
-  opacity:.78;margin:10px 0 0}
+  opacity:.78;margin:10px 0 0;min-height:2.6em}
 .rb-door-name{
   font-family:'Clash Display',sans-serif;
   font-size:clamp(1.5rem,2.8vw,2.7rem);font-weight:320;letter-spacing:-.005em;line-height:1.08;
@@ -251,7 +256,10 @@ html.js .rb-nav{transition:opacity .6s ease .5s}
   text-transform:uppercase;font-weight:450;opacity:.85;margin-top:16px}
 @media (max-width:840px){
   .rb-door-inner{padding:0 12px 18px;display:flex;flex-direction:column;align-items:stretch;gap:6px}
-  .rb-door-loc{font-size:8px;letter-spacing:.12em;margin:5px 0 0;opacity:.72}
+  /* Same reservation as desktop, but in px: at 8px the wrapped Penthouse spec
+     measures 26 and the single-line One-Bedrooms 21, which put the two door
+     titles 6px apart. Reserving 26 in both keeps them on one baseline. */
+  .rb-door-loc{font-size:8px;letter-spacing:.12em;margin:5px 0 0;opacity:.72;min-height:26px}
   .rb-door-name{font-size:clamp(15px,4.4vw,20px);line-height:1.14}
   .rb-door-kind{display:none}
   .rb-door::after{background:linear-gradient(to top,
@@ -617,18 +625,24 @@ html.js .rb-nav{transition:opacity .6s ease .5s}
 
 .rb-door-peek{display:none}
 @media (max-width:840px){
+  /* Minimal on the phone: the whole door is already tappable and goes to the
+     page, so this secondary action does not need a full-width pill with a
+     backdrop blur competing with the photograph behind it. Caps text and a rule
+     that extends on press. The 44px target is kept, it is just not painted. */
   .rb-door-peek{
-    display:block;position:relative;z-index:2;
-    width:100%;min-height:44px;
-    border:1px solid rgba(232,231,225,.42);border-radius:999px;
-    background:rgba(25,27,28,.34);
-    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    display:inline-flex;align-items:center;gap:9px;position:relative;z-index:2;
+    width:auto;min-height:44px;padding:0;
+    border:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;
     color:var(--plaster);
-    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:520;
-    margin-top:8px;flex:0 0 auto;
-    transition:background .3s var(--e),border-color .3s var(--e),transform .16s var(--e)}
-  .rb-door-peek:active{transform:scale(.97)}
-  .rb-door.is-picked .rb-door-peek{background:var(--plaster);color:var(--vault);border-color:var(--plaster)}
+    font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;
+    opacity:.86;
+  }
+  .rb-door-peek::after{content:'';display:block;width:18px;height:1px;
+    background:currentColor;opacity:.75;transition:width .35s var(--e)}
+  .rb-door-peek:active{transform:none;opacity:1}
+  .rb-door-peek:active::after{width:30px}
+  .rb-door.is-picked .rb-door-peek{opacity:1}
+  .rb-door.is-picked .rb-door-peek::after{width:30px;opacity:1}
 }
 
 /* ---------- reduced motion ---------- */
@@ -983,5 +997,27 @@ body.rb-owner{background:var(--vault);color:var(--plaster)}
 .rb-stay-read strong{font-weight:560;color:var(--plaster)}
 .rb-stay-read span{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pl-mute)}
 .rb-stay-src{margin-top:10px;font-size:11px;line-height:1.5;color:var(--pl-mute)}
-@media (min-width:700px){.rb-stay-grids{grid-template-columns:1fr 1fr}}
-@media (max-width:699px){.rb-stay-m2{display:none}}
+/* TWO MONTHS ONLY WHEN THE PANEL CAN HOLD THEM, measured on the panel and not
+   on the window. Each month needs about 266px (seven 38px touch targets), so a
+   pair needs ~540. The booking panel is ~430 at 1090, which is why October was
+   losing Saturday and Sunday: grid children default to min-width:auto, so
+   instead of shrinking they overflowed and were clipped by the panel.
+   A viewport media query cannot know how wide this column is. A container query
+   can, so the second month appears only when it genuinely fits. */
+.rb-stay{container-type:inline-size}
+.rb-stay-m2{display:none}
+/* min-width:0 is the other half: without it a grid child refuses to go below
+   its content's intrinsic width and overflows rather than compressing.
+   max-width keeps a single month from stretching to fill a wide panel: at 609
+   the cells reached 79px, which reads as a chunky date grid rather than a
+   calendar. Centred, so it does not sit off to one side. */
+.rb-stay-m{min-width:0;max-width:392px;margin-inline:auto;width:100%}
+/* 640, not 560. The threshold has to clear the CONTENT box, not the container:
+   two months need 2 x (7 x 38px cells + gaps) plus the column gap, about 584,
+   and the panel's own padding takes ~40 off whatever the container reports.
+   At 560 the second month appeared 10px too wide and clipped Sunday, which is
+   the same bug in a smaller size. */
+@container (min-width:640px){
+  .rb-stay-grids{grid-template-columns:1fr 1fr}
+  .rb-stay-m2{display:block}
+}
