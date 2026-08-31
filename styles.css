@@ -465,10 +465,59 @@ html.js .rb-nav{transition:opacity .6s ease .5s}
 
 /* ---------- footer ---------- */
 .rb-footer{background:var(--vault);color:var(--plaster);position:relative;isolation:isolate}
-.rb-footer-horizon{position:relative;height:clamp(160px,22vh,280px);overflow:hidden}
-.rb-footer-horizon img{width:100%;height:100%;object-fit:cover;opacity:.55}
-.rb-footer-horizon::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(25,27,28,.5) 0%,rgba(25,27,28,.86) 62%,var(--vault) 100%)}
+/* ── THE AURORA BAND ──────────────────────────────────────────────────────
+   Replaces the footer's horizon image, which took a genuinely good northern
+   lights photograph of Hella, dropped it to 55% opacity and laid a heavy scrim
+   over it. What survived read as a grey smear.
+
+   Drawn rather than photographed, so it moves. Three soft fields drifting on
+   long, mismatched cycles, blurred hard and screened over the vault, then faded
+   into the footer's own ground at the bottom so the two are one surface.
+
+   CSS, not WebGL. There is no context to lose, nothing to fall back from, and
+   only transforms animate, so it composites on the GPU and never triggers
+   layout. The green is the honest colour for an aurora; the third field is the
+   ember from the palette, kept faint so the band still belongs to the site. */
+.rb-aurora{position:relative;overflow:hidden;isolation:isolate;background:var(--vault);
+  min-height:clamp(360px,48vh,580px);display:grid;place-items:center;
+  padding-block:clamp(60px,9vw,120px)}
+.rb-aurora-sky{position:absolute;inset:-10%;z-index:0;pointer-events:none}
+.rb-aur{position:absolute;border-radius:50%;filter:blur(72px);mix-blend-mode:screen;
+  will-change:transform;transform:translate3d(0,0,0)}
+.rb-aur-1{left:-10%;top:6%;width:70%;height:46%;opacity:.55;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(96,178,140,.85),rgba(96,178,140,0) 70%);
+  animation:rb-aur-a 34s ease-in-out infinite}
+.rb-aur-2{right:-14%;top:22%;width:62%;height:40%;opacity:.42;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(78,140,152,.8),rgba(78,140,152,0) 70%);
+  animation:rb-aur-b 46s ease-in-out infinite}
+.rb-aur-3{left:22%;bottom:2%;width:56%;height:34%;opacity:.26;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(168,91,59,.8),rgba(168,91,59,0) 70%);
+  animation:rb-aur-c 58s ease-in-out infinite}
+@keyframes rb-aur-a{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(14%,-8%,0) scale(1.18)}}
+@keyframes rb-aur-b{
+  0%,100%{transform:translate3d(0,0,0) scale(1.06)}
+  50%{transform:translate3d(-16%,6%,0) scale(.92)}}
+@keyframes rb-aur-c{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(10%,-10%,0) scale(1.2)}}
+/* Top edge blends out of the section above, bottom edge lands exactly on the
+   footer's vault so there is no seam between them. */
+.rb-aurora::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(to bottom,var(--vault) 0%,rgba(25,27,28,.25) 22%,
+    rgba(25,27,28,.30) 62%,rgba(25,27,28,.86) 90%,var(--vault) 100%)}
+.rb-aurora-inner{position:relative;z-index:2;text-align:center;color:var(--plaster)}
+.rb-aurora-inner .rb-h2{margin-top:14px}
+.rb-aurora-inner .rb-lede{margin:18px auto 0;max-width:52ch;color:var(--pl-soft)}
+@media (prefers-reduced-motion:reduce){.rb-aur{animation:none}}
+/* A blurred field per phone frame is the one place this could cost something,
+   so the faintest one comes out and the blur softens. */
+@media (max-width:840px){
+  .rb-aur{filter:blur(52px)}
+  .rb-aur-3{display:none}
+}
+
 .rb-footer-body{padding-top:clamp(48px,6vw,84px)}
 .rb-footer-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(24px,3vw,48px)}
 .rb-footer h4{font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:520;
