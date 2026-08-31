@@ -60,9 +60,21 @@ p{text-wrap:pretty}
   font-weight:320;letter-spacing:-.01em;line-height:1.05}
 .rb-caps{font-weight:500;font-size:11px;letter-spacing:.22em;text-transform:uppercase}
 
-/* ---------- awning: rests inside the status-bar strip on iOS ---------- */
-.rb-awning{position:sticky;top:-100px;height:106px;flex:none;z-index:39;
-  background:var(--vault);margin-bottom:-106px;pointer-events:none}
+/* ---------- awning: rests inside the status-bar strip on iOS ----------
+   It paints the iOS status-bar strip dark so the notch area is not a pale gap
+   above a dark hero. That only means anything when the page actually extends
+   under the status bar, which needs viewport-fit=cover. This page does not set
+   it, so a hard 106px was not filling a safe area at all: it was painting a
+   106px vault band across the top of the hero on every mobile page, and since
+   the nav only covers the first 64px, the remaining 42px read as a second
+   header bar under the first one.
+   Sized off the real inset instead. Without viewport-fit=cover env() resolves
+   to 0 and the element becomes a no-op, which is the correct behaviour here;
+   if cover is ever switched on it does its job with no further change. */
+.rb-awning{position:sticky;height:env(safe-area-inset-top,0px);
+  top:calc(-1 * env(safe-area-inset-top,0px));
+  margin-bottom:calc(-1 * env(safe-area-inset-top,0px));
+  flex:none;z-index:39;background:var(--vault);pointer-events:none}
 @media (min-width:841px){.rb-awning{display:none}}
 
 /* ---------- nav ---------- */
@@ -106,6 +118,95 @@ p{text-wrap:pretty}
 
 /* ---------- THE DIPTYCH ---------- */
 .rb-doors{display:flex;min-height:100vh;min-height:100svh;background:var(--vault)}
+
+/* Masked line reveal. The padding/negative-margin pair is set inline by the
+   splitter so the em values track each heading's own font size: overflow:hidden
+   crops a display face's ascender and descender overshoot, and without the
+   extra room "ARE" renders as "ARF". The negative margin cancels it so nothing
+   in the layout moves. */
+.rb-rl{display:block;overflow:hidden}
+.rb-rl-i{display:block;will-change:transform}
+
+/* ── THE REVEAL ────────────────────────────────────────────────────────────
+   The loading state is not a separate screen. .rb-doors is already a vault
+   ground with the wordmark centred over it, so the curtain covers only the two
+   photographs: at t=0 the page IS the hero, minus its pictures. Nothing is
+   duplicated and nothing has to be handed off, which is where a curtain-to-hero
+   transition normally goes wrong.
+
+   Display hangs off .js, set once in the head and never removed. It is
+   deliberately NOT gated on .rb-loading, which the finish handler removes: a
+   curtain whose only display comes from the class being removed hits
+   display:none on the same frame its transition should start, and hard-cuts
+   with zero intermediate frames. That fault is invisible in a screenshot. */
+.rb-load{display:none}
+/* overflow:hidden because the panels park at translateX(+-100.5%) once they
+   have parted, and an absolutely positioned child sitting outside the viewport
+   extends the document's scrollWidth. Measured: scrollWidth 2164 against a 1440
+   viewport for the ~1.4s the node lives after the reveal, i.e. a real sideways
+   scroll on every page load. Clipping the curtain container contains the panels
+   exactly and touches nothing else. Deliberately NOT on .rb-doors: an
+   overflow:hidden ancestor silently kills position:sticky descendants. */
+html.js .rb-load{display:grid;grid-template-columns:1fr 1fr;
+  position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+html.rb-loading{overflow:hidden}
+.rb-load-panel{background:var(--vault);will-change:transform;
+  transition:transform 1.05s cubic-bezier(.76,0,.24,1)}
+.rb-load.is-done .rb-load-panel:first-child{transform:translateX(-100.5%)}
+.rb-load.is-done .rb-load-panel:nth-child(2){transform:translateX(100.5%)}
+
+/* The hairline is the only thing on the screen that moves while waiting. It
+   sits low, clear of the wordmark at every size, and leaves before the panels
+   part so it is never cut in half by the seam. */
+.rb-load-line{position:absolute;left:50%;transform:translateX(-50%);
+  bottom:clamp(48px,9vh,90px);width:min(240px,42vw);height:1px;
+  background:var(--hair-pl);overflow:hidden;
+  transition:opacity .28s linear}
+.rb-load-line i{display:block;height:100%;width:100%;background:var(--plaster);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform 1.1s cubic-bezier(.33,.9,.36,1)}
+/* Driven by an animation, not a class-triggered transition. A transition needs
+   app.js to add a class, and app.js is at the end of the body, so the first
+   ~350ms was a near-empty black field with no identity on it. An animation with
+   backwards fill starts at first paint and needs no script at all. */
+html.js .rb-load-line i{animation:rb-line-draw 1.5s cubic-bezier(.33,.9,.36,1) .08s both}
+html.js .rb-doors .rb-load.is-full .rb-load-line i{
+  animation:none;transform:scaleX(1);transition:transform .22s linear}
+@keyframes rb-line-draw{from{transform:scaleX(0)}to{transform:scaleX(.92)}}
+.rb-load.is-done .rb-load-line{opacity:0}
+
+/* The wordmark is the real hero mark, not a copy, so this is its only entrance.
+   Opacity and translate, never letter-spacing: that would reflow every frame. */
+html.js .rb-doors .rb-hero-mark > div{
+  animation:rb-mark-in .95s cubic-bezier(.22,.61,.36,1) .1s both}
+@keyframes rb-mark-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* Photo drift. Base is scale(1.05); the reveal comes from 1.14 and takes 2.6s
+   on a cubic, NOT the house expo ease. Expo is front-loaded, so ~86% of the
+   travel would be spent behind the curtain and the picture would look frozen
+   the moment it is uncovered. On a cubic it is still visibly settling a beat
+   after the panels clear. */
+html.js .rb-doors:not(.is-revealed) .rb-door-media img{transform:scale(1.14)}
+html.js .rb-doors.is-revealed .rb-door-media img{
+  transition:transform 2.6s cubic-bezier(.22,.61,.36,1)}
+
+/* Each door's text starts just after its own half is uncovered. */
+html.js .rb-doors:not(.is-revealed) .rb-door-inner{opacity:0;transform:translateY(20px)}
+html.js .rb-doors.is-revealed .rb-door-inner{opacity:1;transform:none;
+  transition:opacity .8s ease .42s,transform .8s cubic-bezier(.22,.61,.36,1) .42s}
+
+/* Nav arrives last, once there is a page under it. */
+html.js.rb-loading .rb-nav{opacity:0}
+html.js .rb-nav{transition:opacity .6s ease .5s}
+
+@media (prefers-reduced-motion:reduce){
+  html.js .rb-load{display:none}
+  html.js .rb-doors .rb-hero-mark > div,
+  html.js .rb-load-line i,
+  html.js .rb-doors .rb-door-inner{opacity:1;transform:none;transition:none;animation:none}
+  html.js .rb-doors:not(.is-revealed) .rb-door-media img{transform:scale(1.05)}
+  html.js.rb-loading .rb-nav{opacity:1}
+}
 .rb-door{
   position:relative;flex:1 1 0;min-width:0;display:flex;align-items:flex-end;
   overflow:hidden;isolation:isolate;color:var(--plaster);
@@ -138,7 +239,7 @@ p{text-wrap:pretty}
 }
 .rb-door-kind{font-size:13px;opacity:.72;margin-top:8px}
 .rb-hero-mark{
-  position:absolute;inset:0;z-index:2;pointer-events:none;
+  position:absolute;inset:0;z-index:3;pointer-events:none;
   display:grid;place-items:center;color:var(--plaster);text-align:center;
 }
 .rb-hero-mark h1{font-family:'Clash Display',sans-serif;font-weight:380;
@@ -176,8 +277,13 @@ p{text-wrap:pretty}
 
 .rb-frame{position:relative;overflow:hidden;--clip:0%;background:#d6d4cc}
 .rb-frame img{width:100%;height:100%;object-fit:cover}
-.js .rb-frame[data-reveal]{clip-path:inset(0 0 var(--clip) 0)}
-.js .rb-frame[data-reveal] img{transform:scale(1.04)}
+/* The reveal no longer wipes a clip edge across the picture. It arrives out of
+   focus from below and settles, so the frame itself never shows a moving hard
+   line. overflow:hidden on .rb-frame would crop the blur halo, so the blur and
+   the travel live on the frame, not on the image inside it. */
+.js .rb-frame[data-reveal] img{transform:scale(1.02)}
+.js .rb-frame[data-reveal]{will-change:transform,filter,opacity}
+.js .rb-frame[data-reveal].is-settled{will-change:auto}
 .rb-frame figcaption{
   border-top:1px solid var(--hair);padding-top:8px;margin-top:10px;
   font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--ink-mute)}
@@ -721,3 +827,159 @@ body.rb-owner{background:var(--vault);color:var(--plaster)}
   .rb-book-alt a{display:inline-flex;align-items:center;justify-content:center;
     min-height:44px;min-width:44px;padding-inline:4px}
 }
+
+/* ---------------------------------------------------------------
+   GUEST REVIEWS — the archive page (guests.html)
+
+   Ninety-five reviews is a lot of text on a site whose density dial is 3.
+   The restraint that keeps it from becoming a wall: the score is the only
+   loud element, one column of comfortable measure per card, and the cards
+   sit on the plaster ground with hairlines rather than boxes or shadows.
+   --------------------------------------------------------------- */
+
+/* Filters. Real buttons, real pressed state, and they read as type rather
+   than as chips — a pill row would out-shout the reviews. */
+.rb-gf{display:flex;flex-wrap:wrap;gap:6px 26px;padding-bottom:14px;border-bottom:1px solid var(--hair)}
+.rb-gf-btn{font-weight:500;font-size:13px;letter-spacing:.02em;color:var(--ink-mute);
+  padding:6px 0;position:relative;transition:color .25s var(--e)}
+.rb-gf-btn span{font-size:11px;letter-spacing:.06em;opacity:.62;margin-left:4px}
+.rb-gf-btn::after{content:'';position:absolute;left:0;right:0;bottom:-15px;height:1px;
+  background:var(--ember-deep);transform:scaleX(0);transform-origin:0 50%;transition:transform .4s var(--e)}
+.rb-gf-btn:hover{color:var(--vault)}
+.rb-gf-btn.is-on{color:var(--vault)}
+.rb-gf-btn.is-on::after{transform:scaleX(1)}
+.rb-gf-live{font-size:12px;color:var(--ink-mute);margin-top:14px}
+
+.rb-gr-grid{columns:2;column-gap:clamp(28px,4vw,64px);margin-top:clamp(28px,4vw,52px)}
+@media (max-width:860px){.rb-gr-grid{columns:1}}
+
+.rb-gr{break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;
+  padding:clamp(22px,2.4vw,30px) 0;border-top:1px solid var(--hair)}
+.rb-gr[hidden]{display:none}
+.rb-gr-head{display:flex;align-items:flex-start;gap:16px}
+.rb-gr-score{font-family:'Clash Display',sans-serif;font-weight:320;font-size:1.5rem;line-height:1;
+  color:var(--ember-deep);min-width:5.1ch;font-variant-numeric:tabular-nums}
+.rb-gr-who cite{font-style:normal;font-weight:500;font-size:.95rem}
+.rb-gr-who cite span{font-weight:400;color:var(--ink-mute)}
+.rb-gr-meta{font-size:11px;letter-spacing:.04em;color:var(--ink-mute);margin-top:3px}
+.rb-gr-title{font-family:'Clash Display',sans-serif;font-weight:380;font-size:1.12rem;
+  line-height:1.24;margin:16px 0 8px;max-width:34ch}
+/* whitespace:pre-line — plenty of these are written as stacked short lines, and
+   collapsing them into prose is rewriting somebody's review. */
+.rb-gr-pos,.rb-gr-neg{white-space:pre-line;font-size:.98rem;line-height:1.6;max-width:52ch}
+.rb-gr-pos{color:var(--ink-soft);margin-top:10px}
+.rb-gr-neg{color:var(--ink-mute);margin-top:14px;padding-left:16px;border-left:1px solid var(--hair)}
+.rb-gr-neg .rb-caps{display:block;color:var(--ink-mute);margin-bottom:6px;font-size:10px}
+/* NOT sage. Sage is wainscot green: the design system restricts it to structural
+   tints and furniture, never text, and measured on plaster it is 2.55:1 — a fail
+   at 10px. ink-mute is 5.77:1 and is what every other quiet label here uses. */
+.rb-gr-foot{margin-top:clamp(36px,5vw,64px);padding-top:20px;border-top:1px solid var(--hair);
+  font-size:12px;color:var(--ink-mute);max-width:62ch}
+.rb-gr-foot a{border-bottom:1px solid var(--hair);transition:border-color .25s var(--e)}
+.rb-gr-foot a:hover{border-bottom-color:var(--ember-deep)}
+
+/* The two ways into the archive from the curated rotator. Understated on
+   purpose: the six quotes are the emotional hit, this is the receipt. */
+.rb-inline-link{border-bottom:1px solid var(--hair);transition:border-color .25s var(--e)}
+.rb-inline-link:hover{border-bottom-color:var(--ember-deep)}
+.rb-dark .rb-inline-link{border-bottom-color:var(--hair-pl)}
+.rb-rotator-all{display:inline-flex;align-items:center;gap:.5em;margin-top:22px;
+  font-weight:500;font-size:13px;letter-spacing:.02em;color:var(--ink-mute);
+  transition:color .25s var(--e)}
+.rb-rotator-all span{transition:transform .35s var(--e)}
+.rb-rotator-all:hover{color:var(--vault)}
+.rb-rotator-all:hover span{transform:translateX(5px)}
+.rb-dark .rb-rotator-all{color:var(--pl-mute)}
+.rb-dark .rb-rotator-all:hover{color:var(--plaster)}
+
+/* The archive's dark opening. The score is set as a display numeral rather
+   than a stat so the page has one thing to look at before it has ninety-five. */
+.rb-gr-hero{background:var(--vault);color:var(--plaster);
+  padding:calc(var(--nav-h) + clamp(56px,9vw,132px)) 0 clamp(48px,7vw,96px)}
+.rb-gr-hero .rb-caps{color:var(--pl-mute);margin-bottom:clamp(26px,4vw,44px)}
+.rb-gr-hero-figure{display:flex;gap:clamp(24px,4vw,64px);align-items:flex-start;flex-wrap:wrap}
+.rb-gr-big{font-family:'Clash Display',sans-serif;font-weight:280;line-height:.84;
+  font-size:clamp(5.4rem,13vw,11rem);letter-spacing:-.03em;color:var(--ember);
+  font-variant-numeric:tabular-nums;flex:none}
+.rb-gr-hero-figure > div{flex:1 1 22rem;min-width:min(100%,22rem)}
+.rb-gr-hero h1{margin-bottom:clamp(14px,1.8vw,22px)}
+.rb-gr-hero .rb-lede{max-width:54ch;color:var(--pl-soft)}
+.rb-gr-hero-specs{margin-top:clamp(40px,6vw,80px)}
+.rb-gr-hero-specs .rb-spec{border-top-color:var(--hair-pl)}
+.rb-gr-hero-specs .rb-spec span{color:var(--pl-mute)}
+/* The big numeral is aria-hidden decoration, so the lede has to carry the
+   score in text or a screen-reader user never hears it. */
+.rb-gr-hero .rb-lede strong{font-weight:560;color:var(--plaster)}
+
+/* ── two platforms, two scales, never blended ──────────────────────────
+   Booking scores out of 10 and Airbnb out of 5, so every number on this page
+   carries its own denominator. Without it "5" next to "9.6" reads as a bad
+   review instead of a perfect one. The denominator is a real element rather
+   than a ::after, because it must be selectable and copyable with the score. */
+.rb-gr-score i{font-style:normal;font-size:.62em;font-weight:400;color:var(--ink-mute);
+  letter-spacing:.01em;margin-left:.05em}
+.rb-gr-scores{display:flex;flex-direction:column;gap:clamp(4px,.6vw,10px);flex:none}
+.rb-gr-big i{font-style:normal;font-size:.3em;font-weight:400;letter-spacing:.01em;
+  color:var(--pl-mute);vertical-align:.9em;margin-left:.06em}
+/* The Airbnb figure is the second reading, not a rival headline: same family,
+   roughly half the size, plaster instead of ember. Two equal-weight numbers
+   would make the eye choose, and there is nothing to choose between. */
+.rb-gr-big-alt{font-size:clamp(2.6rem,6vw,5rem);color:var(--pl-soft)}
+.rb-gr-big-alt i{color:var(--pl-mute);vertical-align:.75em}
+/* Platform label sits inside the meta line rather than as a floating pill:
+   it is provenance, not a badge to be proud of. */
+.rb-gr-src{display:inline-block;margin-left:.45em;padding:1px 6px;border:1px solid var(--hair);
+  border-radius:2px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);white-space:nowrap}
+
+/* ── THE STAY PICKER ───────────────────────────────────────────────────────
+   Two <input type="date"> fields were here. On a page asking sixty thousand
+   krona a night that is where the site stopped selling: every OTA the guest is
+   comparing against puts a calendar at this point. Behaviour is ported from the
+   audited picker in aurora-hills; only the styling is Riverbank's.
+   Sits on the dark book panel, so every value here is a plaster token. */
+.rb-stay-title{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  font-weight:500;color:var(--pl-mute);margin-bottom:10px}
+.rb-stay{border:1px solid var(--hair-pl);border-radius:3px;padding:clamp(14px,2vw,20px)}
+.rb-stay-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* The month name is announced, not drawn twice: each grid carries its own
+   caption, so a second visible copy in the header would just repeat it. */
+.rb-stay-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.rb-stay-nav{width:38px;height:38px;border:1px solid var(--hair-pl);border-radius:50%;
+  background:none;color:var(--plaster);font-size:15px;line-height:1;cursor:pointer;
+  transition:background .25s var(--e),border-color .25s var(--e),opacity .25s}
+.rb-stay-nav:hover:not(:disabled){background:rgba(232,231,225,.10)}
+.rb-stay-nav:disabled{opacity:.3;cursor:default}
+.rb-stay-nav:focus-visible{outline:2px solid var(--plaster);outline-offset:2px}
+.rb-stay-grids{display:grid;grid-template-columns:1fr;gap:clamp(16px,2.4vw,28px);margin-top:6px}
+.rb-stay-cap{font-family:'Clash Display',sans-serif;font-weight:360;font-size:1rem;
+  text-align:center;margin-bottom:10px;color:var(--plaster)}
+.rb-stay-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.rb-stay-wd span{text-align:center;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pl-mute)}
+.rb-stay-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+/* 15px, not 11px: these are the touch targets of the whole booking flow, and a
+   38px minimum keeps them thumb-sized on a phone. */
+.rb-stay-d{aspect-ratio:1;min-height:38px;border:0;background:none;cursor:pointer;
+  color:var(--plaster);font:inherit;font-size:15px;line-height:1;border-radius:2px;
+  font-variant-numeric:tabular-nums;
+  transition:background .18s linear,color .18s linear}
+.rb-stay-d.is-out{opacity:.26}
+.rb-stay-d:hover:not(:disabled):not(.is-taken){background:rgba(232,231,225,.12)}
+.rb-stay-d:focus-visible{outline:2px solid var(--plaster);outline-offset:-2px}
+.rb-stay-d.is-past{opacity:.22;cursor:default}
+/* Struck, not merely dimmed: a taken night has to be legible as taken, and it
+   is still a legal checkout so it must not look disabled. */
+.rb-stay-d.is-taken{color:var(--pl-mute);text-decoration:line-through;
+  text-decoration-thickness:1px;cursor:not-allowed}
+.rb-stay-d.is-in{background:rgba(232,231,225,.13)}
+.rb-stay-d.is-start,.rb-stay-d.is-end{background:var(--plaster);color:var(--vault);font-weight:560}
+.rb-stay-note{margin-top:12px;font-size:13px;line-height:1.45;color:var(--ember);
+  border-left:2px solid var(--ember);padding-left:10px}
+.rb-stay-read{margin-top:14px;padding-top:12px;border-top:1px solid var(--hair-pl);
+  font-size:14px;color:var(--pl-soft);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.rb-stay-read strong{font-weight:560;color:var(--plaster)}
+.rb-stay-read span{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pl-mute)}
+.rb-stay-src{margin-top:10px;font-size:11px;line-height:1.5;color:var(--pl-mute)}
+@media (min-width:700px){.rb-stay-grids{grid-template-columns:1fr 1fr}}
+@media (max-width:699px){.rb-stay-m2{display:none}}

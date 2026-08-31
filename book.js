@@ -11,30 +11,22 @@
   var submit  = document.getElementById('rb-submit');
   var checkin = document.getElementById('checkin');
   var checkout= document.getElementById('checkout');
-  var nightsNote = document.getElementById('nights-note');
-
-  /* dates cannot be in the past; leaving cannot precede arriving */
-  var today = new Date(); today.setHours(0,0,0,0);
-  var iso = function (d) { return d.toISOString().slice(0,10); };
-  checkin.min = iso(today);
-  checkout.min = iso(new Date(today.getTime() + 86400000));
-
+  
+  /* Dates are owned by the stay picker (booking.js), which writes into the two
+     hidden inputs this form posts. The old min/max juggling and the nights
+     read-out lived here when these were <input type="date">; both are the
+     picker's job now, and leaving them would mean two things setting the same
+     values. */
   function nights() {
     if (!checkin.value || !checkout.value) return 0;
     var a = new Date(checkin.value), b = new Date(checkout.value);
     return Math.round((b - a) / 86400000);
   }
-  function syncNights() {
-    if (checkin.value) {
-      var min = new Date(checkin.value); min.setDate(min.getDate() + 1);
-      checkout.min = iso(min);
-      if (checkout.value && new Date(checkout.value) <= new Date(checkin.value)) checkout.value = iso(min);
-    }
-    var n = nights();
-    nightsNote.textContent = n > 0 ? (n === 1 ? '1 night' : n + ' nights') : '';
+  /* A hidden input cannot take focus, so a date error points at the calendar. */
+  function focusStay() {
+    var d = document.querySelector('.rb-stay-d:not(:disabled)');
+    if (d) { d.focus(); d.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
   }
-  checkin.addEventListener('change', syncNights);
-  checkout.addEventListener('change', syncNights);
 
   function fail(msg, el) {
     errBox.textContent = msg;
@@ -52,9 +44,9 @@
     var email = form.email.value.trim();
     if (!name) return fail('Please add your name so the host knows who is asking.', form.name);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('That email address does not look complete. The host needs it to reply.', form.email);
-    if (!checkin.value) return fail('Please choose the night you arrive.', checkin);
-    if (!checkout.value) return fail('Please choose the day you leave.', checkout);
-    if (nights() < 1) return fail('The leaving date needs to be after the arriving date.', checkout);
+    if (!checkin.value) { focusStay(); return fail('Please choose the night you arrive.'); }
+    if (!checkout.value) { focusStay(); return fail('Please choose the morning you leave.'); }
+    if (nights() < 1) { focusStay(); return fail('The leaving date needs to be after the arriving date.'); }
 
     submit.disabled = true;
     submit.firstChild.textContent = 'Sending… ';

@@ -27,6 +27,54 @@
     }, { rootMargin: '-32px 0px -92% 0px', threshold: 0 });
     document.querySelectorAll('.rb-navdark').forEach(function (el) { darkIO.observe(el); });
   }
+
+  /* ---- the reveal ------------------------------------------------------
+     Two documented faults this is built to avoid, neither visible in a
+     screenshot:
+       1. a curtain whose only display comes from the class the finish handler
+          removes hard-cuts with zero intermediate frames. Display here hangs
+          off .js, which is never removed, so the panels keep a display all the
+          way through their exit.
+       2. a hero entrance driven by a scroll observer plays BEHIND the curtain,
+          because the observer hands it its class at t=0 while it is covered.
+          Nothing here is observer-driven: is-revealed alone drives the hero,
+          and it is set at reveal time.
+     The node is removed only after the panel transition has finished, or it
+     pops out mid-flight. */
+  function initReveal() {
+    var html = document.documentElement;
+    var doors = document.querySelector('.rb-doors');
+    var load = document.querySelector('.rb-load');
+    function open() { html.classList.remove('rb-loading'); if (doors) doors.classList.add('is-revealed'); }
+    if (!doors || !load) { open(); if (load) load.remove(); return; }
+    if (reduce) { open(); load.remove(); return; }
+
+    /* The waiting visuals (wordmark, hairline) are CSS animations that start at
+       first paint, so nothing here has to kick them off. This function only
+       decides WHEN to open. */
+    var waits = [].slice.call(doors.querySelectorAll('.rb-door-media img')).map(function (img) {
+      return img.decode ? img.decode().catch(function () {}) : Promise.resolve();
+    });
+    if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready);
+
+    /* A floor so the hairline is actually seen on a warm cache, and a ceiling so
+       one dead image can never hold the page shut. */
+    var floor = new Promise(function (r) { setTimeout(r, 900); });
+    var ceiling = new Promise(function (r) { setTimeout(r, 2600); });
+    var fired = false;
+
+    Promise.race([Promise.all(waits.concat([floor])), ceiling]).then(function () {
+      if (fired) return; fired = true;
+      load.classList.add('is-full');
+      setTimeout(function () {
+        open();
+        load.classList.add('is-done');
+        setTimeout(function () { load.remove(); }, 1400);
+      }, 260);
+    });
+  }
+  initReveal();
+
   initNavChrome(); /* nav legibility is not motion: runs regardless of reduced-motion */
 
   if (reduce || !window.gsap) return;
@@ -53,21 +101,19 @@
     });
   }
 
-  /* ---- diptych entrance ---- */
-  var doors = gsap.utils.toArray('.rb-door');
-  if (doors.length) {
-    gsap.from(doors.map(function (d) { return d.querySelector('.rb-door-media'); }), {
-      clipPath: 'inset(0 0 100% 0)', duration: 1.1, ease: 'power3.out', stagger: 0.09
-    });
-    gsap.from('.rb-door-inner > :not(.rb-door-peek)', {
-      y: 26, opacity: 0, duration: 0.9, ease: 'power3.out', stagger: 0.06, delay: 0.5
-    });
-    /* the button keeps its own transform for :active, so fade it only */
-    gsap.from('.rb-door-peek', { opacity: 0, duration: 0.7, ease: 'power2.out', delay: 0.9 });
-    gsap.from('.rb-hero-mark h1, .rb-hero-mark p', {
-      opacity: 0, y: 18, duration: 1.1, ease: 'power3.out', stagger: 0.08, delay: 0.35
-    });
-  }
+  /* ---- hero entrance: owned by the reveal, NOT by page load ----------------
+     This used to be a block of gsap.from() calls on .rb-door-media,
+     .rb-door-inner and .rb-hero-mark h1/p, all firing at load. Two problems, and
+     the second one shipped broken:
+       - it played entirely BEHIND the loading curtain, so the curtain lifted
+         onto an already static hero. That is the documented fault.
+       - gsap.from() writes inline opacity:0 on the children, which outranks the
+         CSS reveal animating their parent, so the wordmark stayed invisible for
+         the whole load. Measured: .rb-hero-mark > div at opacity 1 while its own
+         h1 sat at inline opacity 0.
+     One system owns the hero and it is the CSS in styles.css, keyed off
+     .is-revealed. Nothing here touches it. The sub-page hero keeps its load
+     entrance because those pages have no curtain yet. */
   var propHero = document.querySelector('.rb-prop-hero');
   if (propHero) {
     gsap.from('.rb-prop-hero-media img', { scale: 1.12, duration: 1.6, ease: 'power2.out' });
@@ -76,13 +122,101 @@
     });
   }
 
-  /* ---- masked line heads ---- */
-  gsap.utils.toArray('.rb-lines').forEach(function (el) {
-    gsap.from(el, {
-      y: 34, opacity: 0, duration: 0.85, ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 86%' }
+  /* ---- masked line reveal ------------------------------------------------
+     Was a single rise of the whole block, which reads as one slab moving. This
+     splits the heading into its real rendered lines and lifts them out of their
+     own masks with a stagger.
+
+     Two traps, both from [[split-line-probe-must-match-render]]:
+       1. the probe spans must wrap exactly where the finished text wraps. An
+          inline-block span with white-space:pre and the space inside it is a
+          hair wider than the real line, and the mask clips the last glyph
+          ("THEIR BOOKING PAG"). Plain inline spans with real space text nodes
+          between them, grouped by offsetTop, wrap identically.
+       2. overflow:hidden also crops a display face's vertical overshoot, so
+          "ARE" renders as "ARF". The mask gets padding and an equal negative
+          margin, which buys the overshoot room without moving the layout.
+
+     Elements containing markup are left alone and keep the old block rise:
+     rebuilding them from words would throw their links and spans away. */
+  var LINE_PAD_TOP = 0.14, LINE_PAD_BOT = 0.3;
+
+  function splitLines(el) {
+    var text = el.getAttribute('data-rl-text');
+    if (text === null) { text = el.textContent.replace(/\s+/g, ' ').trim(); el.setAttribute('data-rl-text', text); }
+    if (!text) return [];
+    /* probe: one plain inline span per word, real spaces between them */
+    el.textContent = '';
+    var probes = text.split(' ').map(function (w, i) {
+      if (i) el.appendChild(document.createTextNode(' '));
+      var s = document.createElement('span');
+      s.textContent = w;
+      el.appendChild(s);
+      return s;
     });
+    var rows = [], lastTop = null;
+    probes.forEach(function (s) {
+      var t = Math.round(s.offsetTop);
+      if (lastTop === null || Math.abs(t - lastTop) > 2) { rows.push([]); lastTop = t; }
+      rows[rows.length - 1].push(s.textContent);
+    });
+    el.textContent = '';
+    return rows.map(function (ws) {
+      var mask = document.createElement('span');
+      mask.className = 'rb-rl';
+      mask.style.paddingTop = LINE_PAD_TOP + 'em';
+      mask.style.paddingBottom = LINE_PAD_BOT + 'em';
+      mask.style.marginTop = '-' + LINE_PAD_TOP + 'em';
+      mask.style.marginBottom = '-' + LINE_PAD_BOT + 'em';
+      var inner = document.createElement('span');
+      inner.className = 'rb-rl-i';
+      inner.textContent = ws.join(' ');
+      mask.appendChild(inner);
+      el.appendChild(mask);
+      return inner;
+    });
+  }
+
+  var lineEls = gsap.utils.toArray('.rb-lines').filter(function (el) {
+    return !el.querySelector('*');
   });
+  var lineTriggers = [];
+
+  function buildLines() {
+    lineTriggers.forEach(function (t) { t.kill(); });
+    lineTriggers = [];
+    lineEls.forEach(function (el) {
+      var inners = splitLines(el);
+      if (!inners.length) return;
+      var tw = gsap.fromTo(inners, { yPercent: 108 }, {
+        yPercent: 0, duration: 0.95, ease: 'power3.out', stagger: 0.075,
+        scrollTrigger: { trigger: el, start: 'top 88%' }
+      });
+      if (tw.scrollTrigger) lineTriggers.push(tw.scrollTrigger);
+    });
+  }
+  buildLines();
+
+  /* Re-split on a real width change only. Mobile browsers fire resize on every
+     address-bar collapse, and re-splitting mid-scroll would restart reveals the
+     visitor already watched. */
+  var lastW = window.innerWidth;
+  var rsT;
+  window.addEventListener('resize', function () {
+    if (window.innerWidth === lastW) return;
+    lastW = window.innerWidth;
+    clearTimeout(rsT);
+    rsT = setTimeout(function () { buildLines(); ScrollTrigger.refresh(); }, 180);
+  });
+
+  /* blocks that still contain markup keep the old whole-element rise */
+  gsap.utils.toArray('.rb-lines').filter(function (el) { return !!el.querySelector('*'); })
+    .forEach(function (el) {
+      gsap.from(el, {
+        y: 34, opacity: 0, duration: 0.85, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 86%' }
+      });
+    });
 
   /* ---- rise furniture ---- */
   gsap.utils.toArray('.rb-rise').forEach(function (el) {
@@ -92,12 +226,26 @@
     });
   });
 
-  /* ---- photo clip reveals ---- */
+  /* ---- photo reveals: float up, out of focus, and settle ------------------
+     Replaces a clip wipe, which dragged a hard edge across the picture. These
+     rise from below already blurred and come into focus in place.
+
+     Two things this is careful about:
+       - filter:blur() is composited every frame, so will-change is set in CSS
+         and CLEARED the moment the tween ends. Leaving will-change on a dozen
+         large images permanently costs memory for no benefit.
+       - the blur halo would be cropped by an overflow:hidden ancestor, so the
+         blur rides on .rb-frame itself rather than the img inside it. */
   gsap.utils.toArray('.rb-frame[data-reveal]').forEach(function (f) {
     var img = f.querySelector('img');
-    var tl = gsap.timeline({ scrollTrigger: { trigger: f, start: 'top 85%' } });
-    tl.fromTo(f, { '--clip': '100%' }, { '--clip': '0%', duration: 1.25, ease: 'power2.out' })
-      .fromTo(img, { scale: 1.12 }, { scale: 1.04, duration: 1.4, ease: 'power2.out' }, 0);
+    var tl = gsap.timeline({
+      scrollTrigger: { trigger: f, start: 'top 92%' },
+      onComplete: function () { f.classList.add('is-settled'); }
+    });
+    tl.fromTo(f,
+      { y: 72, opacity: 0, filter: 'blur(18px)' },
+      { y: 0, opacity: 1, filter: 'blur(0px)', duration: 1.25, ease: 'power2.out' })
+      .fromTo(img, { scale: 1.08 }, { scale: 1.02, duration: 1.5, ease: 'power2.out' }, 0);
   });
 
   /* ---- band media parallax ---- */

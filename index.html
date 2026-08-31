@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Riverbank | The old bank house on the Rangá, Hella</title>
-<meta name="description" content="Five apartments in the old bank building on the river through Hella: a 160 m² four-bedroom and four 55 m² one-bedrooms, rated 9.6 on Booking.com.">
+<meta name="description" content="Five apartments in the old bank building on the river through Hella: a 160 m² four-bedroom and four 55 m² one-bedrooms, rated 9.7 on Booking.com and 4.99 on Airbnb.">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -13,7 +13,26 @@
 <link rel="preload" href="assets/fonts/GeneralSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <meta name="theme-color" content="#191B1C">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=a06017ee">
+<script>
+/* Set before first paint so the curtain is never a flash of un-curtained hero.
+   'js' is added once and NEVER removed: the curtain's display hangs off it, so
+   it keeps a display through its own exit transition. The failsafe lives here
+   rather than in app.js on purpose, so a failed or blocked app.js cannot leave
+   a visitor staring at a locked, covered page. */
+document.documentElement.classList.add('js','rb-loading');
+setTimeout(function(){
+  document.documentElement.classList.remove('rb-loading');
+  var l=document.querySelector('.rb-load');
+  if(l&&!l.classList.contains('is-done'))l.remove();
+},5000);
+</script>
+<!-- NO AggregateRating / Review here, deliberately. Google: "If the entity
+     that's being reviewed controls the reviews about itself, their pages that
+     use LocalBusiness or any other type of Organization structured data are
+     ineligible for star review feature" — and a Hotel is a LocalBusiness. The
+     reviews are published as ordinary semantic HTML on guests.html instead,
+     which is what a language model reads anyway. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -22,18 +41,33 @@
   "description": "Five apartments in the old bank building on the river through Hella, South Iceland.",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Þrúðvangur 5",
+    "streetAddress": "\u00de\u00far\u00f0vangur 5",
     "postalCode": "850",
     "addressLocality": "Hella",
     "addressRegion": "South Iceland",
     "addressCountry": "IS"
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": 9.6,
-    "bestRating": 10,
-    "reviewCount": 88
-  }
+  "telephone": "+354 840 6768",
+  "numberOfRooms": 5,
+  "petsAllowed": false,
+  "containsPlace": [
+    {
+      "@type": "Accommodation",
+      "name": "The Apartment",
+      "description": "160 m\u00b2 four-bedroom apartment on the river, in charcoal and rust.",
+      "floorSize": { "@type": "QuantitativeValue", "value": 160, "unitCode": "MTK" },
+      "numberOfBedrooms": 4,
+      "url": "apartment.html"
+    },
+    {
+      "@type": "Accommodation",
+      "name": "The One-Bedrooms",
+      "description": "Four 55 m\u00b2 one-bedroom apartments in sage, cream and brass, each with a private kitchen.",
+      "floorSize": { "@type": "QuantitativeValue", "value": 55, "unitCode": "MTK" },
+      "numberOfBedrooms": 1,
+      "url": "one-bedroom.html"
+    }
+  ]
 }
 </script>
 </head>
@@ -45,6 +79,7 @@
   <a class="rb-brand" href="index.html">Riverbank</a>
   <div class="rb-nav-links">
     <a href="apartment.html">The Apartment</a>
+    <a href="guests.html">Guests</a>
     <a href="one-bedroom.html">The One-Bedrooms</a>
     <a class="rb-book" href="#book">Book a stay</a>
   </div>
@@ -55,6 +90,15 @@
 
 <!-- THE DIPTYCH -->
 <header class="rb-doors" aria-label="Two ways to stay">
+  <!-- Covers the two photographs only. The vault ground and the centred
+       wordmark behind it are the real hero, already in place, so the loading
+       state is the hero minus its pictures rather than a separate screen that
+       has to hand off to one. -->
+  <div class="rb-load" aria-hidden="true">
+    <span class="rb-load-panel"></span>
+    <span class="rb-load-panel"></span>
+    <span class="rb-load-line"><i></i></span>
+  </div>
   <div class="rb-hero-mark">
     <div>
       <h1>Riverbank</h1>
@@ -73,7 +117,7 @@
     <div class="rb-door-prev" hidden
          data-lede="The largest home in the house: four bedrooms, an open kitchen and living room, and a balcony with garden and river views."
          data-cta="The Apartment"
-         data-facts='[["160 m²","Four bedrooms, beds for eight"],["Balcony","Garden and river views"],["9.6 / 10","88 Booking.com reviews, whole property"]]'
+         data-facts='[["160 m²","Four bedrooms, beds for eight"],["Balcony","Garden and river views"],["9.7 / 10","95 Booking.com reviews, whole property"]]'
          data-shots="assets/img/f-kitchen.jpg|assets/img/f-bed2.jpg|assets/img/f-stairs.jpg"></div>
   </div>
 
@@ -190,8 +234,8 @@
 <section class="rb-section" aria-label="What guests say">
   <div class="rb-wrap">
     <div class="rb-stat rb-rise">
-      <strong>9.6</strong>
-      <span>Exceptional. From 88 Booking.com reviews of the whole property, read 20 August 2026.</span>
+      <strong>9.7</strong>
+      <span>Exceptional. The average of all 95 Booking.com reviews of the house, alongside 4.99 out of 5 across 82 on Airbnb, read 31 August 2026. <a class="rb-inline-link" href="guests.html">Read all 177</a>.</span>
     </div>
     <div class="rb-specs rb-rise" style="margin-bottom:clamp(36px,5vw,72px)">
       <div class="rb-spec"><strong>9.9</strong><span>Facilities, Booking.com sub-score</span></div>
@@ -216,6 +260,7 @@
         <div class="rb-slide"><blockquote>“Very clean and spacious. Great attention to details.”</blockquote><cite>Edan · United States</cite></div>
       </div>
       <div class="rb-dots"></div>
+      <a class="rb-rotator-all" href="guests.html">Read all 177 reviews, unedited <span aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </section>
@@ -249,14 +294,21 @@
             <option value="Not sure yet">Not sure yet, please advise</option>
               </select>
             </div>
-            <div class="rb-field">
-              <label for="checkin">Arriving</label>
-              <input type="date" id="checkin" name="checkin" required>
-            </div>
-            <div class="rb-field">
-              <label for="checkout">Leaving</label>
-              <input type="date" id="checkout" name="checkout" required>
-              <p class="rb-help" id="nights-note" aria-live="polite"></p>
+            <div class="rb-field rb-field-wide">
+              <span class="rb-stay-title">Which nights</span>
+              <div class="rb-stay" data-stay>
+                <div class="rb-stay-head">
+                  <button type="button" class="rb-stay-nav" data-prev aria-label="Previous month">&larr;</button>
+                  <p class="rb-stay-live" data-month aria-live="polite"></p>
+                  <button type="button" class="rb-stay-nav" data-next aria-label="Next month">&rarr;</button>
+                </div>
+                <div class="rb-stay-grids" data-grids></div>
+                <p class="rb-stay-note" data-note role="status" hidden></p>
+                <p class="rb-stay-read" data-read></p>
+                <p class="rb-stay-src">Availability here is a snapshot of Booking.com taken on 31 August 2026. Once the house calendars are connected it keeps itself current.</p>
+              </div>
+              <input type="hidden" id="checkin" name="checkin">
+              <input type="hidden" id="checkout" name="checkout">
             </div>
             <div class="rb-field">
               <label for="guests">Guests</label>
@@ -325,6 +377,7 @@
           <h4>The apartments</h4>
           <a href="apartment.html">The Apartment · 160 m²</a>
           <a href="one-bedroom.html">The One-Bedrooms · 55 m²</a>
+          <a href="guests.html">Guest reviews · all 177</a>
         </div>
         <div>
           <h4>Book</h4>
@@ -363,8 +416,9 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="store.js"></script>
-<script src="app.js"></script>
-<script src="book.js"></script>
+<script src="store.js?v=994ffa5b"></script>
+<script src="app.js?v=27edb3a5"></script>
+<script src="booking.js?v=475842e1"></script>
+<script src="book.js?v=457d7afb"></script>
 </body>
 </html>
