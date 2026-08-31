@@ -238,6 +238,15 @@
          blur rides on .rb-frame itself rather than the img inside it. */
   gsap.utils.toArray('.rb-frame[data-reveal]').forEach(function (f) {
     var img = f.querySelector('img');
+    /* No artificial stagger here. Frames that need to arrive in sequence are
+       given different vertical positions by the LAYOUT, so they cross their own
+       triggers at different moments and cascade on their own. Two coded
+       attempts (a timeline delay, then a position parameter) both measured
+       three frames at an identical opacity, so the complexity was buying
+       nothing. */
+    /* The stagger belongs on the TWEEN, not on the timeline. A delay on a
+       timeline that a ScrollTrigger drives left every frame sitting at opacity
+       0 instead of playing: measured 0/0/0 where it had been mid-tween. */
     var tl = gsap.timeline({
       scrollTrigger: { trigger: f, start: 'top 92%' },
       onComplete: function () { f.classList.add('is-settled'); }
