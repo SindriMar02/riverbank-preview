@@ -103,7 +103,10 @@
 
   document.getElementById('rb-again').addEventListener('click', function () {
     form.reset();
-    syncNights();
+    /* was syncNights(), which stopped existing when the two date inputs became
+       the stay picker. It threw a ReferenceError here, so the form never came
+       back and the guest was stuck on the receipt. */
+    if (window.riverbankStay) window.riverbankStay.reset();
     submit.disabled = false;
     submit.firstChild.textContent = 'Send the request ';
     receipt.classList.remove('is-in');

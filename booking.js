@@ -50,7 +50,7 @@
      the house is. */
   var TAKEN = {
     'all': ['2026-09-04', '2026-10-14'],
-    'Apartment (160 m2, four bedrooms)': ['2027-07-17'],
+    'The Penthouse, 160 m² with four bedrooms': ['2027-07-17'],
   };
 
   var el = function (s) { return root.querySelector(s); };
@@ -189,4 +189,12 @@
   if (unitSel) unitSel.addEventListener('change', function () { start = null; end = null; say(''); render(); });
 
   render();
+
+  /* Exposed so the form can clear the picker when a guest asks for another
+     night. form.reset() empties the hidden inputs but cannot touch this
+     closure's start/end, so without it the receipt's "ask again" would return
+     a blank form that still believed a stay was selected. */
+  window.riverbankStay = {
+    reset: function () { start = null; end = null; hover = null; say(''); render(); },
+  };
 })();
