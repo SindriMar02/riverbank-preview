@@ -1048,23 +1048,50 @@ body.rb-owner{background:var(--vault);color:var(--plaster)}
 .rb-stay-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
 .rb-stay-wd span{text-align:center;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--pl-mute)}
-.rb-stay-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-/* 15px, not 11px: these are the touch targets of the whole booking flow, and a
-   38px minimum keeps them thumb-sized on a phone. */
+/* THE RANGE, styled after 21st.dev's calendar-range-select (shadcnspace).
+   That component turned out to be react-day-picker with a classNames override,
+   so what is worth having from it is the RECIPE, not the package: adopting it
+   whole would mean Tailwind, Radix, lucide, date-fns and react-day-picker as
+   dependencies, and then rebuilding all seven stay rules on top of a picker
+   that has none of them.
+
+   The recipe: the range is a light tint on the CELL, continuous edge to edge;
+   the two ends round that tint on their outer side into a half-pill; and the
+   chosen days themselves are solid filled circles.
+
+   Mechanically that is two pseudo-elements. ::before is the band, ::after is
+   the circle, both behind the numeral, which is why the button carries
+   isolation:isolate: it keeps the negative z-index inside this button instead
+   of dropping the pair behind the grid. gap is 0 so the band has no seams. */
+.rb-stay-g{display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+/* 15px and a 38px floor: these are the touch targets of the whole booking flow. */
 .rb-stay-d{aspect-ratio:1;min-height:38px;border:0;background:none;cursor:pointer;
-  color:var(--plaster);font:inherit;font-size:15px;line-height:1;border-radius:2px;
-  font-variant-numeric:tabular-nums;
-  transition:background .18s linear,color .18s linear}
+  color:var(--plaster);font:inherit;font-size:15px;line-height:1;
+  font-variant-numeric:tabular-nums;position:relative;isolation:isolate;
+  transition:color .18s linear}
+.rb-stay-d::before{content:'';position:absolute;inset:0;z-index:-2;background:transparent}
+.rb-stay-d::after{content:'';position:absolute;inset:2px;z-index:-1;border-radius:50%;
+  background:transparent;transition:background .18s linear}
 .rb-stay-d.is-out{opacity:.26}
-.rb-stay-d:hover:not(:disabled):not(.is-taken){background:rgba(232,231,225,.12)}
+.rb-stay-d:hover:not(:disabled):not(.is-taken)::after{background:rgba(232,231,225,.12)}
 .rb-stay-d:focus-visible{outline:2px solid var(--plaster);outline-offset:-2px}
 .rb-stay-d.is-past{opacity:.22;cursor:default}
-/* Struck, not merely dimmed: a taken night has to be legible as taken, and it
-   is still a legal checkout so it must not look disabled. */
+/* Struck, not merely dimmed: a taken night must be legible as taken, and it is
+   still a legal checkout so it must not look disabled. */
 .rb-stay-d.is-taken{color:var(--pl-mute);text-decoration:line-through;
   text-decoration-thickness:1px;cursor:not-allowed}
-.rb-stay-d.is-in{background:rgba(232,231,225,.13)}
-.rb-stay-d.is-start,.rb-stay-d.is-end{background:var(--plaster);color:var(--vault);font-weight:560}
+/* the continuous band */
+.rb-stay-d.is-in::before{background:rgba(232,231,225,.13)}
+/* The ends only carry a band once there is a range to band, so a lone arrival
+   date does not sit in half a pill. :has keeps that decision in CSS rather than
+   adding another class from the script. */
+.rb-stay-g:has(.is-end) .rb-stay-d.is-start::before{
+  background:rgba(232,231,225,.13);border-radius:999px 0 0 999px}
+.rb-stay-g:has(.is-end) .rb-stay-d.is-end::before{
+  background:rgba(232,231,225,.13);border-radius:0 999px 999px 0}
+/* the chosen days */
+.rb-stay-d.is-start,.rb-stay-d.is-end{color:var(--vault);font-weight:560}
+.rb-stay-d.is-start::after,.rb-stay-d.is-end::after{background:var(--plaster)}
 .rb-stay-note{margin-top:12px;font-size:13px;line-height:1.45;color:var(--ember);
   border-left:2px solid var(--ember);padding-left:10px}
 .rb-stay-read{margin-top:14px;padding-top:12px;border-top:1px solid var(--hair-pl);
@@ -1082,7 +1109,7 @@ body.rb-owner{background:var(--vault);color:var(--plaster)}
    while min-height keeps the target tall. Both problems, one change. */
 @media (max-width:409px){
   .rb-stay{padding:12px}
-  .rb-stay-g{gap:1px}
+  .rb-stay-g{gap:0}
   .rb-stay-wd{gap:1px}
   .rb-stay-d{aspect-ratio:auto;min-height:44px;font-size:14px}
 }
