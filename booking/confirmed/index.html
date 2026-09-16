@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Booking confirmation | Riverbank</title>
+    <meta name="description" content="Your Riverbank booking after payment: the apartment, your dates and what was paid." />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Riverbank" />
+    <meta property="og:title" content="Booking confirmation | Riverbank" />
+    <meta property="og:description" content="Your Riverbank booking after payment: the apartment, your dates and what was paid." />
+    <meta property="og:url" content="https://riverbank.is/booking/confirmed" />
+    <meta property="og:image" content="https://riverbank.is/assets/img/building.jpg" />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Booking confirmation | Riverbank" />
+    <meta name="twitter:description" content="Your Riverbank booking after payment: the apartment, your dates and what was paid." />
+    <meta name="twitter:image" content="https://riverbank.is/assets/img/building.jpg" />
+    
+<link rel="icon" href="/riverbank-preview/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="/riverbank-preview/favicon-32.png" />
+<link rel="apple-touch-icon" href="/riverbank-preview/apple-touch-icon.png" />
+<link rel="preload" href="/riverbank-preview/assets/fonts/ClashDisplay-Variable.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/riverbank-preview/assets/fonts/GeneralSans-Variable.woff2" as="font" type="font/woff2" crossorigin />
+<meta name="theme-color" content="#191B1C" />
+<script>
+/* Set before first paint so the loading curtain is never a flash of un-curtained
+   hero. 'js' is added once and NEVER removed: the curtain's display hangs off it,
+   so it keeps a display through its own exit transition. The failsafe is here
+   rather than in the bundle on purpose, so a failed or blocked script cannot
+   leave a visitor on a locked, covered page. */
+document.documentElement.classList.add('js','rb-loading');
+setTimeout(function(){
+  document.documentElement.classList.remove('rb-loading');
+  /* HIDE, never remove: this element is rendered by React, and detaching it
+     here makes React's own removeChild throw on the next route change and
+     unmount the entire app. See the note in design/motion.ts. */
+  var l=document.querySelector('.rb-load');
+  if(l&&!l.classList.contains('is-done'))l.classList.add('is-gone');
+},5000);
+
+/* STALE-BUILD WATCHDOG. GitHub Pages serves index.html with max-age=600, so for
+   ten minutes after a deploy a returning visitor can hold HTML that asks for
+   hashed chunks the new build no longer has. Here that is not a white screen,
+   because the page is prerendered and the copy is already in #root; it is worse
+   in one specific way: the page LOOKS fine and is silently not hydrated, so the
+   booking form does nothing when you press it.
+
+   Capture phase, because resource errors do not bubble. Inline rather than in
+   the bundle, because the case it exists for is the bundle not arriving. Exactly
+   one retry, held in sessionStorage, so a genuinely broken build shows a broken
+   page instead of reloading forever. Scoped to /assets/ so a dead third-party
+   resource can never reload a guest's page out from under them. */
+(function(){
+  var KEY='sndr:stale-build-reload';
+  window.addEventListener('error',function(e){
+    var t=e.target;
+    if(!t||(t.tagName!=='SCRIPT'&&t.tagName!=='LINK'))return;
+    var u=t.src||t.href||'';
+    if(u.indexOf('/assets/')===-1)return;
+    try{ if(sessionStorage.getItem(KEY))return; sessionStorage.setItem(KEY,'1'); }catch(_){ return; }
+    location.reload();
+  },true);
+  window.addEventListener('load',function(){
+    /* Cleared only once the app has actually booted, so the single retry is
+       still available the next time a deploy lands mid-visit. */
+    setTimeout(function(){ if(window.__rbBooted){ try{sessionStorage.removeItem(KEY)}catch(_){} } },2000);
+  });
+})();
+</script>
+  <script type="module" crossorigin src="/riverbank-preview/assets/index-d7KrXGda.js"></script>
+  <link rel="modulepreload" crossorigin href="/riverbank-preview/assets/react-BgHzHa_s.js">
+  <link rel="modulepreload" crossorigin href="/riverbank-preview/assets/gsap-SFc2wnMY.js">
+  <link rel="stylesheet" crossorigin href="/riverbank-preview/assets/index-DSBndxQi.css">
+</head>
+<body>
+<div id="root"><a class="rb-skip" href="#main">Skip to content</a><div class="rb-awning" aria-hidden="true"></div><nav class="rb-nav" aria-label="Main"><a class="rb-brand" href="/riverbank-preview"><svg class="rb-brand-mark" viewBox="0 0 3685 2220" fill="currentColor" aria-hidden="true" focusable="false"><path d="M0 1665 L369 2220 L737 1665 L369 1110 Z"></path><path d="M1474 555 L1106 0 L737 555 L1106 1110 L1474 1665 L1843 2220 L2211 1665 L1843 1110 Z"></path><path d="M3317 1110 L2948 555 L2580 0 L2211 555 L2580 1110 L2948 1665 L3317 2220 L3685 1665 Z"></path></svg>Riverbank</a><div class="rb-nav-links"><a class="" href="/riverbank-preview/penthouse">The Penthouse</a><a class="" href="/riverbank-preview/one-bedrooms">The One-Bedrooms</a><a class="" href="/riverbank-preview/guests">Guests</a><a class="rb-book" href="/riverbank-preview#book">Book a stay</a></div></nav><div class="rb-x is-idle" aria-hidden="true"><span class="rb-x-panel"></span><span class="rb-x-panel"></span></div><div class="rb-page"><main id="main"><section class="rb-section rb-dark rb-navdark" style="min-height:70vh;display:grid;place-items:center"><div class="rb-wrap" style="width:100%;max-width:620px" aria-live="polite"><p class="rb-caps rb-mute">Riverbank</p><h1 class="rb-h2" style="margin-top:14px">No booking to show</h1><p class="rb-lede" style="margin-top:18px">This page shows a booking after payment, and the link does not name one.</p><p style="margin-top:26px"><a class="rb-inline-link" href="/riverbank-preview">Back to Riverbank</a></p></div></section></main><footer class="rb-footer rb-navdark"><div class="rb-footer-body"><div class="rb-wrap"><div class="rb-footer-grid"><div class="rb-footer-cta"><p class="rb-footer-lede">Five apartments in the old bank house in <!-- -->Hella<!-- -->.</p><a class="rb-btn rb-btn-solid" href="/riverbank-preview#book">Book your stay <span class="rb-btn-ico" aria-hidden="true">→</span></a></div><div><h2>The house</h2><address>Þrúðvangur 5<br/>850<!-- --> <!-- -->Hella</address><p class="rb-footer-geo">South Iceland<!-- --> · on the river <!-- -->Rangá</p></div><div><h2>The apartments</h2><a href="/riverbank-preview/penthouse">The Penthouse<!-- --> · <!-- -->160<!-- --> m²</a><a href="/riverbank-preview/one-bedrooms">The One-Bedrooms<!-- --> · <!-- -->55<!-- --> m²</a><a href="/riverbank-preview/guests">Guest reviews · all <!-- -->177</a><a href="/riverbank-preview/winter">Winter and northern lights</a></div><div class="rb-footer-contact"><h2>Contact</h2><p class="rb-footer-host">Harpa</p><a href="mailto:harpa@riverbank.is">harpa@riverbank.is</a><a href="tel:+3548646817">+354 864 6817</a></div></div></div><div class="rb-footer-mark"><svg class="rb-footer-glyph" viewBox="0 0 3685 2220" fill="currentColor" aria-hidden="true" focusable="false"><path d="M0 1665 L369 2220 L737 1665 L369 1110 Z"></path><path d="M1474 555 L1106 0 L737 555 L1106 1110 L1474 1665 L1843 2220 L2211 1665 L1843 1110 Z"></path><path d="M3317 1110 L2948 555 L2580 0 L2211 555 L2580 1110 L2948 1665 L3317 2220 L3685 1665 Z"></path></svg><span class="rb-footer-word" aria-hidden="true">Riverbank</span></div></div><div class="rb-footer-base"><p>Riverbank · <!-- -->Þrúðvangur 5<!-- -->, <!-- -->Hella</p><p>Demo prototype, not a live booking site.</p><p class="rb-footer-credit"><a class="sndr" href="https://sndrstudio.is" target="_blank" rel="noopener" aria-label="Designed by SNDR Studio" data-logotype="true"><span class="sndr__mark">SN<i>✦</i>DR</span><span class="sndr__studio">STUDIO</span></a></p></div></footer></div><dialog class="rb-lb" aria-label="Photograph"></dialog></div>
+</body>
+</html>
